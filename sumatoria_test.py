@@ -1,12 +1,28 @@
 import big_o
 from big_o import complexities as cmpl
-import gnuplotlib as gp
+import importlib
 import math
 import numpy as np
 import unittest
 import warnings
 
 import sumatoria
+
+
+def _graficar(fitted, titulo):
+    xs = fitted['measures']
+    ys = fitted['times']
+
+    if importlib.util.find_spec('gnuplotlib') is not None:
+        import gnuplotlib as gp
+        gp.plot(xs, ys, _with='lines', terminal='dumb 60,30',
+                unset='grid', title=titulo, xlabel='n', ylabel='tiempo')
+
+    for k, v in fitted.items():
+        if isinstance(k, big_o.complexities.ComplexityClass):
+            residual = v
+            r2 = 1 - residual / (ys.size * ys.var())
+            print(k, f' (r={residual}, r^2={r2})')
 
 
 class PruebasSumatoria(unittest.TestCase):
@@ -26,16 +42,7 @@ class PruebasSumatoria(unittest.TestCase):
                                    n_measures=100, n_repeats=3, verbose=False,
                                    classes=[cmpl.Linear, cmpl.Quadratic, cmpl.Constant, cmpl.Cubic], return_raw_data=True)
 
-        xs = fitted['measures']
-        ys = fitted['times']
-        gp.plot(xs, ys, _with='lines', terminal='dumb 60,30',
-                unset='grid', title='sumatoria_cubica', xlabel='n', ylabel='tiempo')
-
-        for k, v in fitted.items():
-            if isinstance(k, big_o.complexities.ComplexityClass):
-                residual = v
-                r2 = 1 - residual / (ys.size * ys.var())
-                print(k, f' (r={residual}, r^2={r2})')
+        _graficar(fitted, 'sumatoria_cubica')
 
         if not isinstance(best, big_o.complexities.Cubic):
             warnings.warn(
@@ -56,16 +63,7 @@ class PruebasSumatoria(unittest.TestCase):
                                    n_measures=10000, n_repeats=3, n_timings=5, verbose=False,
                                    classes=[cmpl.Constant, cmpl.Quadratic], return_raw_data=True)
 
-        xs = fitted['measures']
-        ys = fitted['times']
-        gp.plot(xs, ys, _with='lines', terminal='dumb 60,30',
-                unset='grid', title='sumatoria_constante', xlabel='n', ylabel='T(n)')
-
-        for k, v in fitted.items():
-            if isinstance(k, big_o.complexities.ComplexityClass):
-                residual = v
-                r2 = 1 - residual / (ys.size * ys.var())
-                print(k, f' (r={residual}, r^2={r2})')
+        _graficar(fitted, 'sumatoria_constante')
 
         if not isinstance(best, big_o.complexities.Constant):
             warnings.warn(
